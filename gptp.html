@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Simple Paint Program</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    canvas {
+      border: 1px solid black;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="paintCanvas" width="800" height="500" 
+          onmousedown="startPosition(event)"
+          onmouseup="endPosition()"
+          onmousemove="draw(event)">
+    Your browser does not support the HTML5 canvas tag.
+  </canvas>
+  
+  <input type="color" id="colorPicker" onchange="changeColor(event)">
+  <button onclick="saveImage()">Save</button>
+  <input type="file" id="openFile" accept="image/*" onchange="openImage(event)">
+  <button onclick="increaseBrushSize()">Increase Brush Size</button>
+  <button onclick="decreaseBrushSize()">Decrease Brush Size</button>
+  <label for="brushSizeInput">Brush Size:</label>
+  <input type="number" id="brushSizeInput" value="5" min="1" max="1000000000000000000000000" onchange="updateBrushSize(event)">
+  
+  <script>
+    const canvas = document.getElementById("paintCanvas");
+    const context = canvas.getContext("2d");
+    let isPainting = false;
+    let selectedColor = "#000000"; // Default color
+    let brushSize = 5;
+
+    function startPosition(e) {
+      isPainting = true;
+      draw(e);
+    }
+
+    function endPosition() {
+      isPainting = false;
+      context.beginPath();
+    }
+
+    function draw(e) {
+      if (!isPainting) return;
+
+      context.lineWidth = brushSize;
+      context.lineCap = "round";
+      context.strokeStyle = selectedColor;
+
+      context.lineTo(e.clientX - canvas.offsetLeft, e.clientY - canvas.offsetTop);
+      context.stroke();
+      context.beginPath();
+      context.moveTo(e.clientX - canvas.offsetLeft, e.clientY - canvas.offsetTop);
+    }
+
+    function changeColor(e) {
+      selectedColor = e.target.value;
+    }
+
+    function saveImage() {
+      const imgData = canvas.toDataURL("image/png");
+      const link = document.createElement("a");
+      link.href = imgData;
+      link.download = "my_drawing.png";
+      link.click();
+    }
+
+    function openImage(e) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+
+      reader.onload = function(event) {
+        const img = new Image();
+        img.onload = function() {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          context.drawImage(img, 0, 0);
+        }
+        img.src = event.target.result;
+      }
+
+      if (file) {
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function increaseBrushSize() {
+      brushSize *= 2;
+      updateBrushSizeInput();
+    }
+
+    function decreaseBrushSize() {
+      if (brushSize > 2) {
+        brushSize /= 2;
+        updateBrushSizeInput();
+      }
+    }
+
+    function updateBrushSize(event) {
+      const newBrushSize = parseInt(event.target.value);
+      if (!isNaN(newBrushSize) && newBrushSize >= 1 && newBrushSize <= 1000000000000000000000000) {
+        brushSize = newBrushSize;
+      } else {
+        event.target.value = brushSize;
+      }
+    }
+
+    function updateBrushSizeInput() {
+      document.getElementById("brushSizeInput").value = brushSize;
+    }
+  </script>
+</body>
+</html>
